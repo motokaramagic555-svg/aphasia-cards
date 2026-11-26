@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>失語症のタイプと病巣（フラッシュカード）</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
+
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f5f6f8;
+      color: #0f172a;
+      margin: 0;
+    }
+
+    /* シンプルで確実なフェードアニメーション（3D反転なし） */
+    .card-fade {
+      animation: fadeCard 0.14s ease-out;
+    }
+
+    @keyframes fadeCard {
+      from {
+        opacity: 0.45;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-dvh flex flex-col items-center justify-center px-4 pt-[calc(14px+var(--sat))] pb-[calc(16px+var(--sab))]">
+
+  <!-- =========================================================
+       1. 合言葉ロック画面
+       ========================================================= -->
+  <section
+    id="lockScreen"
+    class="w-full max-w-sm bg-white border border-slate-200/90 rounded-3xl shadow-sm p-6 sm:p-8 flex flex-col gap-5"
+  >
+    <div class="text-center space-y-2">
+      <div class="mx-auto w-12 h-12 rounded-2xl bg-[#007aff]/10 text-[#007aff] flex items-center justify-center">
+        <!-- 鍵アイコン（SVG） -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+      <h1 class="text-lg sm:text-xl font-bold text-slate-900">
+        失語症のタイプと病巣
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-500">
+        合言葉を入力してください
+      </p>
+    </div>
+
+    <form id="unlockForm" class="space-y-3" novalidate>
+      <div>
+        <label for="passcodeInput" class="sr-only">合言葉</label>
+        <input
+          id="passcodeInput"
+          type="text"
+          autocomplete="off"
+          autocapitalize="none"
+          spellcheck="false"
+          placeholder="合言葉を入力"
+          class="w-full px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#007aff] transition"
+        />
+      </div>
+
+      <!-- エラーメッセージ -->
+      <p
+        id="lockErrorMsg"
+        role="alert"
+        class="hidden text-xs sm:text-sm font-bold text-red-600 text-center"
+      >
+        合言葉が違います
+      </p>
+
+      <button
+        type="submit"
+        class="w-full py-3.5 px-4 rounded-2xl bg-[#007aff] hover:bg-[#0066d6] active:scale-[0.99] text-sm sm:text-base font-bold text-white shadow-2xs transition cursor-pointer"
+      >
+        ロック解除
+      </button>
+    </form>
+
+    <p class="text-[11px] sm:text-xs text-slate-400 text-center leading-relaxed">
+      ※合言葉は作成者に確認してください
+    </p>
+  </section>
+
+  <!-- =========================================================
+       2. フラッシュカード本体（ロック解除後に表示）
+       ========================================================= -->
+  <div
+    id="appScreen"
+    class="hidden w-full max-w-lg flex-col flex-1 justify-between gap-3.5"
+  >
+    <!-- ヘッダー：タイトル＆共有・ロックボタン -->
+    <div class="flex items-center justify-between gap-2 pb-1">
+      <h1 class="text-base sm:text-lg font-bold text-slate-900 truncate">
+        失語症のタイプと病巣
+      </h1>
+
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button
+          id="shareCopyBtn"
+          type="button"
+          class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-xs font-semibold text-slate-700 shadow-2xs transition cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          招待コピー
+        </button>
+
+        <button
+          id="lockBtn"
+          type="button"
+          class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-xs font-semibold text-slate-600 shadow-2xs transition cursor-pointer"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          ロック
+        </button>
+      </div>
+    </div>
+
+    <!-- トップバー：進捗カウンター＆機能ボタン -->
+    <header class="flex items-center justify-between gap-2">
+      <div
+        id="counterBadge"
+        class="px-3.5 py-2 rounded-xl bg-white border border-slate-200/90 text-sm font-bold text-slate-800 shadow-2xs shrink-0"
+      >
+        1 / 23
+      </div>
+
+      <div class="flex items-center gap-1.5 sm:gap-2">
+        <button
+          id="reverseToggleBtn"
+          type="button"
+          class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs transition cursor-pointer"
+        >
+          逆引き
+        </button>
+
+        <button
+          id="shuffleBtn"
+          type="button"
+          class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs transition cursor-pointer"
+        >
+          シャッフル
+        </button>
+
+        <button
+          id="starFilterBtn"
+          type="button"
+          class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-xs sm:text-sm font-semibold text-slate-700 shadow-2xs transition cursor-pointer"
+        >
+          ★のみ (0)
+        </button>
+      </div>
+    </header>
+
+    <!-- メインカード（タップで表裏切替） -->
+    <main class="flex-1 flex flex-col justify-center min-h-[260px]">
+      <div
+        id="flashcard"
+        role="button"
+        tabindex="0"
+        aria-label="カードをタップして表裏を切り替え"
+        class="w-full flex-1 max-h-[520px] min-h-[260px] bg-white hover:border-slate-300 border border-slate-200/90 rounded-3xl shadow-sm p-6 sm:p-8 flex flex-col justify-between transition cursor-pointer select-none"
+      >
+        <!-- カード上部：ラベル＆苦手マーク -->
+        <div class="flex items-center justify-between gap-2">
+          <span
+            id="sideTag"
+            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#007aff]/10 text-[#007aff]"
+          >
+            タイプ（タップで病巣）
+          </span>
+
+          <span
+            id="cardStarBadge"
+            class="text-sm font-bold text-[#ff9500] hidden"
+            aria-hidden="true"
+          >
+            ★ 苦手
+          </span>
+        </div>
+
+        <!-- カード中央：テキスト＆ヒント表示 -->
+        <div id="cardContentWrap" class="my-auto py-4 text-center space-y-4 overflow-y-auto">
+          <p
+            id="cardMainText"
+            class="text-xl sm:text-2xl font-bold text-slate-900 leading-relaxed break-words"
+          >
+            ブローカ失語
+          </p>
+
+          <div
+            id="hintBox"
+            class="hidden mx-auto max-w-md px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs sm:text-sm text-slate-600 leading-relaxed"
+          >
+            <span class="font-bold text-slate-700">ヒント：</span><span id="hintText"></span>
+          </div>
+        </div>
+
+        <!-- カード下部：ヒントを見るボタン -->
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-center">
+          <button
+            id="hintToggleBtn"
+            type="button"
+            class="px-3.5 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200/80 text-xs font-semibold text-slate-600 transition cursor-pointer"
+          >
+            ヒントを見る
+          </button>
+        </div>
+      </div>
+
+      <!-- ステータスメッセージ -->
+      <div
+        id="statusBanner"
+        class="hidden mt-2.5 px-4 py-2 rounded-2xl bg-slate-800 text-white text-xs sm:text-sm font-medium text-center"
+      ></div>
+    </main>
+
+    <!-- フッター操作ボタン -->
+    <footer>
+      <div class="grid grid-cols-3 gap-2.5">
+        <button
+          id="prevBtn"
+          type="button"
+          class="py-3.5 px-3 rounded-2xl bg-white hover:bg-slate-50 active:scale-[0.99] border border-slate-200/90 text-sm sm:text-base font-bold text-slate-800 shadow-2xs disabled:opacity-35 disabled:pointer-events-none transition cursor-pointer"
+        >
+          前へ
+        </button>
+
+        <button
+          id="starToggleBtn"
+          type="button"
+          class="py-3.5 px-3 rounded-2xl bg-white hover:bg-amber-50 active:scale-[0.99] border border-slate-200/90 text-sm sm:text-base font-bold text-slate-700 shadow-2xs disabled:opacity-35 disabled:pointer-events-none transition cursor-pointer"
+        >
+          ☆ 苦手
+        </button>
+
+        <button
+          id="nextBtn"
+          type="button"
+          class="py-3.5 px-3 rounded-2xl bg-[#007aff] hover:bg-[#0066d6] active:scale-[0.99] text-sm sm:text-base font-bold text-white shadow-2xs disabled:opacity-35 disabled:pointer-events-none transition cursor-pointer"
+        >
+          次へ
+        </button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- 招待コピー用隠しテキストエリア（iFrame内でも確実にコピーできるようにするため） -->
+  <textarea id="copyHelper" class="sr-only" aria-hidden="true" readonly></textarea>
+
+  <script>
+    /**
+     * 合言葉の設定
+     */
+    const SECRET_WORD = "失語";
+    const UNLOCK_STORAGE_KEY = "aphasia_unlocked_v2";
+    const WEAK_STORAGE_KEY = "aphasia_weak_v2";
+
+    /**
+     * 失語症のタイプと病巣（全23枚）
+     */
+    const CARDS = [
+      {
+        id: 1,
+        q: "ブローカ失語",
+        a: "ブローカ野（左下前頭回三角部・弁蓋部）＋左中心前回下部を含む環シルビウス言語野前方（※ブローカ野のみの損傷ではブローカ失語にならない）",
+        h: "古典的失語症候群／シルビウス裂の前方領域"
+      },
+      {
+        id: 2,
+        q: "ウェルニッケ失語",
+        a: "ウェルニッケ野（左上側頭回後半部）を含む環シルビウス言語野後方",
+        h: "古典的失語症候群／左上側頭回後半部を含む後方領域"
+      },
+      {
+        id: 3,
+        q: "全失語",
+        a: "環シルビウス言語野を含む広範な病変",
+        h: "古典的失語症候群／最も重度で広い範囲の障害"
+      },
+      {
+        id: 4,
+        q: "伝導失語",
+        a: "左縁上回を中心とする頭頂葉皮質・皮質下、あるいは弓状束",
+        h: "古典的失語症候群／復唱障害が顕著な連絡線維や頭頂葉"
+      },
+      {
+        id: 5,
+        q: "超皮質性感覚失語",
+        a: "左側頭－頭頂－後頭葉接合部領域が多い",
+        h: "古典的失語症候群／TPO接合部領域"
+      },
+      {
+        id: 6,
+        q: "超皮質性運動失語",
+        a: "左前頭葉背外側・補足運動野を含む左前頭葉内側面（前大脳動脈領域）",
+        h: "古典的失語症候群／ACA領域や補足運動野を含む前頭葉"
+      },
+      {
+        id: 7,
+        q: "混合型超皮質性失語",
+        a: "左側頭－頭頂－後頭葉接合部および左前頭葉背外側",
+        h: "別名：言語野孤立症候群"
+      },
+      {
+        id: 8,
+        q: "失名詞失語（健忘失語）",
+        a: "確定的な責任病巣なし",
+        h: "古典的失語症候群／最も軽度の失語症"
+      },
+      {
+        id: 9,
+        q: "皮質下性失語：視床失語",
+        a: "左視床",
+        h: "その他の失語症候群／視床領域"
+      },
+      {
+        id: 10,
+        q: "皮質下性失語：被殻・内包失語",
+        a: "左被殻・内包",
+        h: "その他の失語症候群／基底核・内包領域"
+      },
+      {
+        id: 11,
+        q: "交叉性失語",
+        a: "右半球",
+        h: "その他の失語症候群／利き手と逆側の半球損傷"
+      },
+      {
+        id: 12,
+        q: "語義失語",
+        a: "左側頭葉（上側頭回を除く）",
+        h: "その他の失語症候群／名詞の意味理解困難が目立つ側頭葉"
+      },
+      {
+        id: 13,
+        q: "原発性進行性失語：非流暢／失文法型",
+        a: "ブローカ野、左中心前回を中心とした萎縮・血流低下",
+        h: "その他の失語症候群／努力性で停滞する発話や失文法"
+      },
+      {
+        id: 14,
+        q: "原発性進行性失語：意味型",
+        a: "左側頭葉前方を中心とした萎縮・血流低下",
+        h: "その他の失語症候群／意味記憶障害や表層性失読・失書"
+      },
+      {
+        id: 15,
+        q: "原発性進行性失語：ロゴペニック型",
+        a: "左上・中側頭回、下頭頂小葉の萎縮・血流低下",
+        h: "その他の失語症候群／音韻性錯語と復唱障害"
+      },
+      {
+        id: 16,
+        q: "純粋発語失行（純粋語唖、失構音）",
+        a: "左中心前回中～下部",
+        h: "純粋型／調音運動のプログラミング過程の障害"
+      },
+      {
+        id: 17,
+        q: "純粋語唖",
+        a: "両側側頭葉または左側頭葉",
+        h: "純粋型／言語音のみが選択的に聴取できない"
+      },
+      {
+        id: 18,
+        q: "純粋失読：古典型",
+        a: "左後頭葉内側部と脳梁膨大部",
+        h: "純粋型／右視野からの視覚情報が左角回へ伝わらない離断"
+      },
+      {
+        id: 19,
+        q: "純粋失読：非古典型",
+        a: "左角回近傍と左紡錘状回(左側頭葉後下部)",
+        h: "純粋型／離断または単語の視覚形態認知障害"
+      },
+      {
+        id: 20,
+        q: "純粋失書：頭頂葉性",
+        a: "左角回近傍など",
+        h: "純粋型／漢字と仮名の両方に障害、仮名に強い障害"
+      },
+      {
+        id: 21,
+        q: "純粋失書：前頭葉性",
+        a: "左中前頭回後部（エクスナーの書字中枢）",
+        h: "純粋型／複数文字列における文字の選択と配列の障害"
+      },
+      {
+        id: 22,
+        q: "純粋失書：側頭葉性",
+        a: "左側頭葉後下部",
+        h: "純粋型／漢字に強い障害"
+      },
+      {
+        id: 23,
+        q: "失読失書",
+        a: "角回、側頭葉後下部",
+        h: "純粋型／読み書き両方の障害（なぞり読みの効果はない）"
+      }
+    ];
+
+    const state = {
+      order: CARDS.map((c) => c.id),
+      currentIndex: 0,
+      isBack: false,
+      isReverse: false,
+      showHint: false,
+      starOnly: false,
+      weakIds: new Set()
+    };
+
+    const dom = {
+      lockScreen: document.getElementById("lockScreen"),
+      unlockForm: document.getElementById("unlockForm"),
+      passcodeInput: document.getElementById("passcodeInput"),
+      lockErrorMsg: document.getElementById("lockErrorMsg"),
+      appScreen: document.getElementById("appScreen"),
+      shareCopyBtn: document.getElementById("shareCopyBtn"),
+      lockBtn: document.getElementById("lockBtn"),
+      counterBadge: document.getElementById("counterBadge"),
+      reverseToggleBtn: document.getElementById("reverseToggleBtn"),
+      shuffleBtn: document.getElementById("shuffleBtn"),
+      starFilterBtn: document.getElementById("starFilterBtn"),
+      flashcard: document.getElementById("flashcard"),
+      sideTag: document.getElementById("sideTag"),
+      cardStarBadge: document.getElementById("cardStarBadge"),
+      cardContentWrap: document.getElementById("cardContentWrap"),
+      cardMainText: document.getElementById("cardMainText"),
+      hintBox: document.getElementById("hintBox"),
+      hintText: document.getElementById("hintText"),
+      hintToggleBtn: document.getElementById("hintToggleBtn"),
+      statusBanner: document.getElementById("statusBanner"),
+      prevBtn: document.getElementById("prevBtn"),
+      starToggleBtn: document.getElementById("starToggleBtn"),
+      nextBtn: document.getElementById("nextBtn"),
+      copyHelper: document.getElementById("copyHelper")
+    };
+
+    let bannerTimer = null;
+
+    /* =========================================================
+       ロック制御（合言葉認証 & localStorage永続化）
+       ========================================================= */
+    function isUnlockedSaved() {
+      try {
+        return localStorage.getItem(UNLOCK_STORAGE_KEY) === "true";
+      } catch (err) {
+        return false;
+      }
+    }
+
+    function setUnlockedSaved(value) {
+      try {
+        if (value) {
+          localStorage.setItem(UNLOCK_STORAGE_KEY, "true");
+        } else {
+          localStorage.removeItem(UNLOCK_STORAGE_KEY);
+        }
+      } catch (err) {
+        console.warn("ロック状態の保存に失敗しました:", err);
+      }
+    }
+
+    function showAppScreen() {
+      dom.lockScreen.classList.add("hidden");
+      dom.appScreen.classList.remove("hidden");
+      dom.appScreen.classList.add("flex");
+      document.body.classList.remove("justify-center");
+      renderCard(false);
+    }
+
+    function showLockScreen() {
+      dom.appScreen.classList.add("hidden");
+      dom.appScreen.classList.remove("flex");
+      dom.lockScreen.classList.remove("hidden");
+      document.body.classList.add("justify-center");
+      dom.passcodeInput.value = "";
+      dom.lockErrorMsg.classList.add("hidden");
+    }
+
+    dom.unlockForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const entered = dom.passcodeInput.value.trim();
+      const expected = SECRET_WORD.trim();
+
+      if (entered === expected) {
+        dom.lockErrorMsg.classList.add("hidden");
+        setUnlockedSaved(true);
+        showAppScreen();
+      } else {
+        dom.lockErrorMsg.classList.remove("hidden");
+        dom.passcodeInput.focus();
+      }
+    });
+
+    dom.passcodeInput.addEventListener("input", () => {
+      if (!dom.lockErrorMsg.classList.contains("hidden")) {
+        dom.lockErrorMsg.classList.add("hidden");
+      }
+    });
+
+    dom.lockBtn.addEventListener("click", () => {
+      setUnlockedSaved(false);
+      showLockScreen();
+    });
+
+    /* =========================================================
+       招待文コピー（URL＋合言葉をクリップボードにコピー）
+       ========================================================= */
+    dom.shareCopyBtn.addEventListener("click", () => {
+      const currentUrl = window.location.href;
+      const inviteText = `失語症のタイプと病巣（フラッシュカード）\nURL: ${currentUrl}\n合言葉: ${SECRET_WORD}`;
+      try {
+        dom.copyHelper.value = inviteText;
+        dom.copyHelper.select();
+        dom.copyHelper.setSelectionRange(0, inviteText.length);
+        document.execCommand("copy");
+        showStatus("招待文（URLと合言葉）をコピーしました");
+      } catch (err) {
+        showStatus("URLと合言葉「失語」をLINE等で送ってください");
+      }
+    });
+
+    /* =========================================================
+       フラッシュカード機能
+       ========================================================= */
+    function showStatus(message) {
+      dom.statusBanner.textContent = message;
+      dom.statusBanner.classList.remove("hidden");
+      if (bannerTimer) clearTimeout(bannerTimer);
+      bannerTimer = setTimeout(() => {
+        dom.statusBanner.classList.add("hidden");
+      }, 1600);
+    }
+
+    function loadWeakIds() {
+      try {
+        const raw = localStorage.getItem(WEAK_STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          const validIds = new Set(CARDS.map((c) => c.id));
+          state.weakIds = new Set(parsed.filter((id) => validIds.has(id)));
+        }
+      } catch (err) {
+        console.warn("苦手データの読み込みに失敗しました:", err);
+      }
+    }
+
+    function saveWeakIds() {
+      try {
+        localStorage.setItem(WEAK_STORAGE_KEY, JSON.stringify([...state.weakIds]));
+      } catch (err) {
+        console.warn("苦手データの保存に失敗しました:", err);
+      }
+    }
+
+    function getFilteredIds() {
+      if (!state.starOnly) return state.order;
+      return state.order.filter((id) => state.weakIds.has(id));
+    }
+
+    function appStateClass(isActive, activeColors) {
+      const base = "px-3 py-2 rounded-xl border text-xs sm:text-sm font-semibold shadow-2xs transition cursor-pointer";
+      return isActive
+        ? `${base} ${activeColors}`
+        : `${base} bg-white hover:bg-slate-50 border-slate-200/90 text-slate-700`;
+    }
+
+    function updateControlButtons() {
+      const weakCount = state.weakIds.size;
+
+      dom.reverseToggleBtn.className = appStateClass(
+        state.isReverse,
+        "bg-[#007aff] border-[#007aff] text-white"
+      );
+
+      dom.starFilterBtn.textContent = `★のみ (${weakCount})`;
+      dom.starFilterBtn.className = appStateClass(
+        state.starOnly,
+        "bg-[#ff9500] border-[#ff9500] text-white"
+      );
+    }
+
+    function renderCard(animate = false) {
+      updateControlButtons();
+
+      const activeIds = getFilteredIds();
+      const total = activeIds.length;
+
+      if (total === 0) {
+        dom.counterBadge.textContent = "0 / 0";
+        dom.sideTag.textContent = "該当なし";
+        dom.sideTag.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500";
+        dom.cardStarBadge.classList.add("hidden");
+        dom.cardMainText.textContent = "苦手マーク（★）が付いたカードはありません";
+        dom.cardMainText.className = "text-lg sm:text-xl font-semibold text-slate-600 leading-relaxed";
+        dom.hintBox.classList.add("hidden");
+        dom.hintToggleBtn.classList.add("hidden");
+        dom.prevBtn.disabled = true;
+        dom.nextBtn.disabled = true;
+        dom.starToggleBtn.disabled = true;
+        dom.starToggleBtn.textContent = "☆ 苦手";
+        return;
+      }
+
+      dom.hintToggleBtn.classList.remove("hidden");
+
+      if (state.currentIndex < 0) state.currentIndex = 0;
+      if (state.currentIndex >= total) state.currentIndex = total - 1;
+
+      const currentId = activeIds[state.currentIndex];
+      const card = CARDS.find((c) => c.id === currentId);
+      if (!card) return;
+
+      const isWeak = state.weakIds.has(card.id);
+      const frontText = state.isReverse ? card.a : card.q;
+      const backText = state.isReverse ? card.q : card.a;
+      const frontLabel = state.isReverse ? "病巣（タップでタイプ）" : "タイプ（タップで病巣）";
+
+      dom.counterBadge.textContent = `${state.currentIndex + 1} / ${total}`;
+      dom.cardStarBadge.classList.toggle("hidden", !isWeak);
+
+      if (state.isBack) {
+        dom.sideTag.textContent = "答え";
+        dom.sideTag.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700";
+        dom.cardMainText.textContent = backText;
+        dom.cardMainText.className = "text-lg sm:text-xl font-bold text-slate-900 leading-relaxed break-words";
+      } else {
+        dom.sideTag.textContent = frontLabel;
+        dom.sideTag.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#007aff]/10 text-[#007aff]";
+        dom.cardMainText.textContent = frontText;
+        dom.cardMainText.className = state.isReverse
+          ? "text-lg sm:text-xl font-bold text-slate-900 leading-relaxed break-words"
+          : "text-xl sm:text-2xl font-bold text-slate-900 leading-relaxed break-words";
+      }
+
+      if (state.showHint && card.h) {
+        dom.hintText.textContent = card.h;
+        dom.hintBox.classList.remove("hidden");
+        dom.hintToggleBtn.textContent = "ヒントを隠す";
+      } else {
+        dom.hintBox.classList.add("hidden");
+        dom.hintToggleBtn.textContent = "ヒントを見る";
+      }
+
+      dom.starToggleBtn.disabled = false;
+      if (isWeak) {
+        dom.starToggleBtn.textContent = "★ 苦手中";
+        dom.starToggleBtn.className =
+          "py-3.5 px-3 rounded-2xl bg-[#ff9500]/10 hover:bg-[#ff9500]/15 active:scale-[0.99] border border-[#ff9500]/40 text-sm sm:text-base font-bold text-[#c77400] shadow-2xs transition cursor-pointer";
+      } else {
+        dom.starToggleBtn.textContent = "☆ 苦手";
+        dom.starToggleBtn.className =
+          "py-3.5 px-3 rounded-2xl bg-white hover:bg-slate-50 active:scale-[0.99] border border-slate-200/90 text-sm sm:text-base font-bold text-slate-700 shadow-2xs transition cursor-pointer";
+      }
+
+      dom.prevBtn.disabled = state.currentIndex <= 0;
+      dom.nextBtn.disabled = state.currentIndex >= total - 1;
+
+      if (animate) {
+        dom.cardContentWrap.classList.remove("card-fade");
+        void dom.cardContentWrap.offsetWidth;
+        dom.cardContentWrap.classList.add("card-fade");
+      }
+    }
+
+    function flipCard() {
+      if (getFilteredIds().length === 0) return;
+      state.isBack = !state.isBack;
+      renderCard(true);
+    }
+
+    function goPrev() {
+      if (state.currentIndex > 0) {
+        state.currentIndex -= 1;
+        state.isBack = false;
+        renderCard(true);
+      }
+    }
+
+    function goNext() {
+      const total = getFilteredIds().length;
+      if (state.currentIndex < total - 1) {
+        state.currentIndex += 1;
+        state.isBack = false;
+        renderCard(true);
+      }
+    }
+
+    function toggleWeakCurrent() {
+      const activeIds = getFilteredIds();
+      if (activeIds.length === 0) return;
+      const currentId = activeIds[state.currentIndex];
+
+      if (state.weakIds.has(currentId)) {
+        state.weakIds.delete(currentId);
+        showStatus("苦手マークを解除しました");
+      } else {
+        state.weakIds.add(currentId);
+        showStatus("★ 苦手カードに追加しました");
+      }
+      saveWeakIds();
+      renderCard(false);
+    }
+
+    function shuffleOrder() {
+      const nextOrder = [...state.order];
+      for (let i = nextOrder.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [nextOrder[i], nextOrder[j]] = [nextOrder[j], nextOrder[i]];
+      }
+      state.order = nextOrder;
+      state.currentIndex = 0;
+      state.isBack = false;
+      renderCard(true);
+      showStatus("カードをシャッフルしました");
+    }
+
+    dom.flashcard.addEventListener("click", flipCard);
+    dom.flashcard.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        flipCard();
+      }
+    });
+
+    dom.hintToggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      state.showHint = !state.showHint;
+      renderCard(false);
+    });
+
+    dom.prevBtn.addEventListener("click", goPrev);
+    dom.nextBtn.addEventListener("click", goNext);
+    dom.starToggleBtn.addEventListener("click", toggleWeakCurrent);
+
+    dom.reverseToggleBtn.addEventListener("click", () => {
+      state.isReverse = !state.isReverse;
+      state.isBack = false;
+      renderCard(true);
+      showStatus(state.isReverse ? "病巣 → タイプ に切り替えました" : "タイプ → 病巣 に切り替えました");
+    });
+
+    dom.shuffleBtn.addEventListener("click", shuffleOrder);
+
+    dom.starFilterBtn.addEventListener("click", () => {
+      state.starOnly = !state.starOnly;
+      state.currentIndex = 0;
+      state.isBack = false;
+      renderCard(true);
+      showStatus(state.starOnly ? "★ 苦手カードのみ出題します" : "全23枚の出題に戻しました");
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (dom.appScreen.classList.contains("hidden")) return;
+      if (e.key === "ArrowLeft") goPrev();
+      else if (e.key === "ArrowRight") goNext();
+    });
+
+    // 初期化処理
+    loadWeakIds();
+    if (isUnlockedSaved()) {
+      showAppScreen();
+    } else {
+      showLockScreen();
+    }
+  </script>
+</body>
+</html>
